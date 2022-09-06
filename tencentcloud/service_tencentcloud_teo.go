@@ -756,3 +756,61 @@ func (me *TeoService) DescribeAvailablePlans(ctx context.Context) (availablePlan
 	availablePlans = response.Response
 	return
 }
+
+func (me *TeoService) DescribeTeoBotManagedRulesByFilter(ctx context.Context, param map[string]interface{}) (botManagedRules []*teo.BotManagedRuleDetail, errRet error) {
+	var (
+		logId   = getLogId(ctx)
+		request = teo.NewDescribeBotManagedRulesRequest()
+	)
+
+	defer func() {
+		if errRet != nil {
+			log.Printf("[CRITAL]%s api[%s] fail, request body [%s], reason[%s]\n",
+				logId, "query object", request.ToJsonString(), errRet.Error())
+		}
+	}()
+
+	for k, v := range param {
+		if k == "zone_id" {
+			request.ZoneId = helper.String(v.(string))
+		}
+
+		if k == "entity" {
+			request.Entity = helper.String(v.(string))
+		}
+
+		if k == "rule_type" {
+			request.RuleType = helper.String(v.(string))
+		}
+
+	}
+	ratelimit.Check(request.GetAction())
+
+	var offset int64 = 0
+	var pageSize int64 = 100
+
+	for {
+		request.Page = &offset
+		request.PerPage = &pageSize
+		ratelimit.Check(request.GetAction())
+		response, err := me.client.UseTeoClient().DescribeBotManagedRules(request)
+		if err != nil {
+			log.Printf("[CRITAL]%s api[%s] fail, request body [%s], reason[%s]\n",
+				logId, request.GetAction(), request.ToJsonString(), err.Error())
+			errRet = err
+			return
+		}
+		log.Printf("[DEBUG]%s api[%s] success, request body [%s], response body [%s]\n",
+			logId, request.GetAction(), request.ToJsonString(), response.ToJsonString())
+
+		if response == nil || len(response.Response.Rules) < 1 {
+			break
+		}
+		botManagedRules = append(botManagedRules, response.Response.Rules...)
+		if len(response.Response.Rules) < int(pageSize) {
+			break
+		}
+		offset += pageSize
+	}
+	return
+}
