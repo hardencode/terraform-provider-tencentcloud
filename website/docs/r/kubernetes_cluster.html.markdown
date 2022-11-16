@@ -107,7 +107,7 @@ resource "tencentcloud_kubernetes_cluster" "managed_cluster" {
 }
 ```
 
-Use Kubelet
+Customize Kubernetes component startup parameter
 
 ```hcl
 variable "availability_zone_first" {
