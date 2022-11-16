@@ -34,7 +34,7 @@ func dataSourceTencentCloudAddressTemplateGroups() *schema.Resource {
 			"id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Id of the address template group to query.",
+				Description: "Id of the address template group to query.Test.",
 			},
 			"result_output_file": {
 				Type:        schema.TypeString,
